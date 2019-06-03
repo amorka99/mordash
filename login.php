@@ -9,54 +9,41 @@ $sslrootcert = FOLDER_CERTS.'/root.crt';
 $sslkey = FOLDER_CERTS.'/postgresql.key';
 $sslcert = FOLDER_CERTS.'/postgresql.crt';
 if(isset($_POST['ok'])) {
-   $login = $_POST['login'];
-   $pass = $_POST['pass'];
- $_SESSION['login']=$login;
-try {
-$pdo = new PDO("pgsql:host=$host;port=$port;dbname=$db;sslmode=verify-ca;sslrootcert=$sslrootcert;sslkey=$sslkey;sslcert=$sslcert",
-'root', null, array(
-PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-PDO::ATTR_EMULATE_PREPARES => true,
-));
-$sql = "SELECT role FROM mordash.roles  WHERE login = ? AND password= ?";
-$stmt = $pdo->prepare($sql); 
-$stmt->execute([$login,$pass]);
-$num_row=$stmt->rowCount();//fetchColumn();
-
-} catch (Exception $e) {
-print $e->getMessage() . "\r\n";
-exit(1);
+    $login = $_POST['login'];
+    $pass = $_POST['pass'];
+  try {
+    $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$db;sslmode=verify-ca;sslrootcert=$sslrootcert;sslkey=$sslkey;sslcert=$sslcert",
+    'root', null, array(
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_EMULATE_PREPARES => true,
+    ));
+    $sql = "SELECT role FROM mordash.roles  WHERE login = ? AND password= ?";
+    $stmt = $pdo->prepare($sql); 
+    $stmt->execute([$login,$pass]);
+    $num_row=$stmt->rowCount();//fetchColumn();
+  } catch (Exception $e) {
+    print $e->getMessage() . "\r\n";
+    exit(1);
+  }
+  if($num_row==1){
+    $_SESSION['login']=$login;
+    $row=$stmt->fetch();
+    $_SESSION['check']=$row['role'];
+    if($row['role']==0){
+    header("Location: dashboard.php");
+    } elseif($row['role']==1){
+      header("Location: teacher.php");
+    } else {
+      header("Location: student.php");
+    }
+  } else {
+    header("login.php");
+    echo $login;
+    echo " ";
+    echo $pass;
+    echo ' Wrong!!!';}
 }
-if($num_row==1){
-$row=$stmt->fetch();
-
-$_SESSION['check']=$row['role'];
-
-if($row['role']==0){
-header("Location: dashboard.php");
-
-}
-elseif($row['role']==1){
-
-
-header("Location: teacher.php");
-}
-else
-{
-header("Location: student.php");
-}
-}
-
-else {
- header("login.php");
-
-echo $login;
-echo " ";
-echo $pass;
-echo ' Wrong!!!';}
-}
-<!doctype html>
-
+?>
 
 <html lang="en">
   <head>
